@@ -14,3 +14,8 @@ CasADi: For symbolic modeling and automatic differentiation.
 PyBullet: Physics engine for the drone simulation.
 
 Matplotlib & NumPy: For data visualization and numerical operations.
+
+
+You may install the Python dependencies with:
+
+pip install pybullet numpy matplotlib casadi
