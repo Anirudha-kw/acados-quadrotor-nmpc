@@ -1,0 +1,67 @@
+<?xml version="1.0"?>
+<!--
+  Crazyflie 2.x style nano-quadrotor built from primitive shapes.
+
+  All mass and inertia live in base_link and match quadrotor_nmpc.params.QuadrotorParams.
+  The mass-less child links only exist so that each part can carry its own colour
+  (PyBullet's OpenGL renderer uses one colour per link). Front rotors (+x) have orange
+  propellers, rear rotors blue ones, so the heading is visible in videos.
+  Motor offset d = 0.0397 / sqrt(2) = 0.02807 m.
+-->
+<robot name="crazyflie">
+  <material name="frame"><color rgba="0.20 0.21 0.24 1"/></material>
+  <material name="battery"><color rgba="0.78 0.80 0.84 1"/></material>
+  <material name="prop_front"><color rgba="1.00 0.42 0.08 1"/></material>
+  <material name="prop_rear"><color rgba="0.13 0.62 1.00 1"/></material>
+  <material name="led"><color rgba="0.20 1.00 0.45 1"/></material>
+
+  <link name="base_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.027"/>
+      <inertia ixx="1.4e-5" ixy="0" ixz="0" iyy="1.4e-5" iyz="0" izz="2.17e-5"/>
+    </inertial>
+    <visual><origin xyz="0 0 0" rpy="0 0 0"/><geometry><box size="0.034 0.034 0.004"/></geometry><material name="frame"/></visual>
+    <visual><origin xyz="0 0 0" rpy="0 0 0.785398"/><geometry><box size="0.080 0.005 0.003"/></geometry><material name="frame"/></visual>
+    <visual><origin xyz="0 0 0" rpy="0 0 -0.785398"/><geometry><box size="0.080 0.005 0.003"/></geometry><material name="frame"/></visual>
+    <visual><origin xyz="0.02807 0.02807 0.002" rpy="0 0 0"/><geometry><cylinder radius="0.0042" length="0.012"/></geometry><material name="frame"/></visual>
+    <visual><origin xyz="0.02807 -0.02807 0.002" rpy="0 0 0"/><geometry><cylinder radius="0.0042" length="0.012"/></geometry><material name="frame"/></visual>
+    <visual><origin xyz="-0.02807 0.02807 0.002" rpy="0 0 0"/><geometry><cylinder radius="0.0042" length="0.012"/></geometry><material name="frame"/></visual>
+    <visual><origin xyz="-0.02807 -0.02807 0.002" rpy="0 0 0"/><geometry><cylinder radius="0.0042" length="0.012"/></geometry><material name="frame"/></visual>
+    <visual><origin xyz="0.02807 0.02807 -0.0085" rpy="0 0 0"/><geometry><cylinder radius="0.0015" length="0.011"/></geometry><material name="frame"/></visual>
+    <visual><origin xyz="0.02807 -0.02807 -0.0085" rpy="0 0 0"/><geometry><cylinder radius="0.0015" length="0.011"/></geometry><material name="frame"/></visual>
+    <visual><origin xyz="-0.02807 0.02807 -0.0085" rpy="0 0 0"/><geometry><cylinder radius="0.0015" length="0.011"/></geometry><material name="frame"/></visual>
+    <visual><origin xyz="-0.02807 -0.02807 -0.0085" rpy="0 0 0"/><geometry><cylinder radius="0.0015" length="0.011"/></geometry><material name="frame"/></visual>
+    <!-- One collision box from the feet (z = -0.014) to the propellers -->
+    <collision>
+      <origin xyz="0 0 -0.002" rpy="0 0 0"/>
+      <geometry><box size="0.09 0.09 0.024"/></geometry>
+    </collision>
+  </link>
+
+  <link name="battery_link">
+    <inertial><origin xyz="0 0 0" rpy="0 0 0"/><mass value="0"/><inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/></inertial>
+    <visual><origin xyz="0 0 0.006" rpy="0 0 0"/><geometry><box size="0.030 0.016 0.008"/></geometry><material name="battery"/></visual>
+  </link>
+  <joint name="battery_joint" type="fixed"><parent link="base_link"/><child link="battery_link"/></joint>
+
+  <link name="led_link">
+    <inertial><origin xyz="0 0 0" rpy="0 0 0"/><mass value="0"/><inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/></inertial>
+    <visual><origin xyz="0.0165 0 0.003" rpy="0 0 0"/><geometry><box size="0.004 0.006 0.002"/></geometry><material name="led"/></visual>
+  </link>
+  <joint name="led_joint" type="fixed"><parent link="base_link"/><child link="led_link"/></joint>
+
+  <link name="props_front_link">
+    <inertial><origin xyz="0 0 0" rpy="0 0 0"/><mass value="0"/><inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/></inertial>
+    <visual><origin xyz="0.02807 0.02807 0.0090" rpy="0 0 0"/><geometry><cylinder radius="0.0225" length="0.0012"/></geometry><material name="prop_front"/></visual>
+    <visual><origin xyz="0.02807 -0.02807 0.0090" rpy="0 0 0"/><geometry><cylinder radius="0.0225" length="0.0012"/></geometry><material name="prop_front"/></visual>
+  </link>
+  <joint name="props_front_joint" type="fixed"><parent link="base_link"/><child link="props_front_link"/></joint>
+
+  <link name="props_rear_link">
+    <inertial><origin xyz="0 0 0" rpy="0 0 0"/><mass value="0"/><inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/></inertial>
+    <visual><origin xyz="-0.02807 0.02807 0.0090" rpy="0 0 0"/><geometry><cylinder radius="0.0225" length="0.0012"/></geometry><material name="prop_rear"/></visual>
+    <visual><origin xyz="-0.02807 -0.02807 0.0090" rpy="0 0 0"/><geometry><cylinder radius="0.0225" length="0.0012"/></geometry><material name="prop_rear"/></visual>
+  </link>
+  <joint name="props_rear_joint" type="fixed"><parent link="base_link"/><child link="props_rear_link"/></joint>
+</robot>
