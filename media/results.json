@@ -1,0 +1,57 @@
+{
+  "circle": {
+    "rmse_m": 0.0006381667163811617,
+    "mean_error_m": 0.0005384073246308599,
+    "max_error_m": 0.0008427460205286444,
+    "final_error_m": 1.661204201984166e-09,
+    "solve_mean_ms": 0.6065554445554446,
+    "solve_p99_ms": 1.361,
+    "solve_max_ms": 2.235,
+    "nonzero_status": 0,
+    "steps": 1001
+  },
+  "figure_eight": {
+    "rmse_m": 0.000572662865609774,
+    "mean_error_m": 0.0004532223532942792,
+    "max_error_m": 0.0009708612362758517,
+    "final_error_m": 2.7417495035756493e-09,
+    "solve_mean_ms": 0.6533746253746254,
+    "solve_p99_ms": 1.5070000000000001,
+    "solve_max_ms": 3.306,
+    "nonzero_status": 0,
+    "steps": 1001
+  },
+  "point_to_point": {
+    "rmse_m": 0.00016751319035309878,
+    "mean_error_m": 7.310396593231285e-05,
+    "max_error_m": 0.0009354599332520859,
+    "final_error_m": 4.632824861688432e-13,
+    "solve_mean_ms": 0.563210643015521,
+    "solve_p99_ms": 1.3765,
+    "solve_max_ms": 2.072,
+    "nonzero_status": 0,
+    "steps": 451
+  },
+  "wind": {
+    "rmse_m": 0.003206988102130998,
+    "mean_error_m": 0.0022912675779651957,
+    "max_error_m": 0.011925147721590413,
+    "final_error_m": 0.0014007449247629524,
+    "solve_mean_ms": 0.7691308691308691,
+    "solve_p99_ms": 1.526,
+    "solve_max_ms": 4.165,
+    "nonzero_status": 0,
+    "steps": 1001
+  },
+  "wind_no_observer": {
+    "rmse_m": 0.00919410685913005,
+    "mean_error_m": 0.007472053333453736,
+    "max_error_m": 0.02525215650466772,
+    "final_error_m": 0.0033134817415872556,
+    "solve_mean_ms": 0.8044035964035963,
+    "solve_p99_ms": 1.7149999999999999,
+    "solve_max_ms": 4.163,
+    "nonzero_status": 0,
+    "steps": 1001
+  }
+}
