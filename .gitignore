@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+
+# acados code generation
+c_generated_code*/
+acados_ocp*.json
+*.so
+
+# Run outputs (media/ holds the curated results)
+runs/
+*.npz
+*.mp4
+!media/*.mp4
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store

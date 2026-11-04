@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+env:
+  ACADOS_VERSION: v0.5.1
+
+jobs:
+  lint-and-unit-tests:
+    name: Lint + unit tests (py${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - name: Install (PyBullet/acados tests are skipped in this job)
+        run: pip install numpy casadi matplotlib imageio imageio-ffmpeg pytest ruff
+      - name: Lint
+        run: |
+          ruff check .
+          ruff format --check .
+      - name: Unit tests
+        run: pytest -q
+
+  closed-loop:
+    name: Closed-loop NMPC (acados + PyBullet)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Cache acados build
+        id: cache-acados
+        uses: actions/cache@v4
+        with:
+          path: ~/acados
+          key: acados-${{ env.ACADOS_VERSION }}-${{ runner.os }}-py311
+
+      - name: Build acados
+        if: steps.cache-acados.outputs.cache-hit != 'true'
+        run: |
+          git clone --depth 1 --branch "$ACADOS_VERSION" https://github.com/acados/acados.git ~/acados
+          cd ~/acados
+          git submodule update --init --recursive --depth 1
+          mkdir -p build && cd build
+          cmake -DACADOS_WITH_QPOASES=OFF -DACADOS_WITH_OPENMP=OFF ..
+          make install -j"$(nproc)"
+          curl -sSL -o ~/acados/bin/t_renderer \
+            https://github.com/acados/tera_renderer/releases/download/v0.2.0/t_renderer-v0.2.0-linux-amd64
+          chmod +x ~/acados/bin/t_renderer
+
+      - name: Install Python packages
+        run: |
+          pip install -e ~/acados/interfaces/acados_template
+          pip install -e ".[dev]"
+
+      - name: Closed-loop tests
+        run: |
+          export ACADOS_SOURCE_DIR="$HOME/acados"
+          export LD_LIBRARY_PATH="$ACADOS_SOURCE_DIR/lib:$LD_LIBRARY_PATH"
+          pytest -q -rs tests/test_closed_loop.py
