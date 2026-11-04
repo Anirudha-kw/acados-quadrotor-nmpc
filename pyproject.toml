@@ -45,5 +45,6 @@ ignore = ["E741"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]
 markers = ["slow: closed-loop runs that compile an acados solver"]
 filterwarnings = ["ignore::DeprecationWarning"]
