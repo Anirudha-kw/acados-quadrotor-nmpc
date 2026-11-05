@@ -19,7 +19,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--realtime", action="store_true", help="pace the GUI at wall-clock speed")
     parser.add_argument("--no-observer", action="store_true", help="disable the disturbance observer")
     parser.add_argument("--plot", metavar="PNG", help="save a summary figure")
-    parser.add_argument("--video", metavar="MP4", help="render a dashboard video (headless is fine)")
+    parser.add_argument("--video", metavar="MP4", help="render an MP4 of the PyBullet view (headless is fine)")
     parser.add_argument("--save-log", metavar="NPZ", help="save the logged time series")
     parser.add_argument("--quiet", action="store_true")
     args = parser.parse_args(argv)

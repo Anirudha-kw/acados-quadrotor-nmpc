@@ -1,4 +1,4 @@
-"""Render closed-loop runs to MP4/GIF: PyBullet camera views plus a live telemetry dashboard."""
+"""Render closed-loop runs to MP4/GIF: the native PyBullet view with clean path and telemetry overlays."""
 
 from __future__ import annotations
 
@@ -11,6 +11,8 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 import pybullet as pb  # noqa: E402
+from matplotlib.patches import FancyBboxPatch  # noqa: E402
+from matplotlib.transforms import Bbox  # noqa: E402
 
 from .controller import NMPCConfig, QuadrotorNMPC  # noqa: E402
 from .scenarios import Scenario, SimLog  # noqa: E402
@@ -75,14 +77,26 @@ def _orbit_for(traj_pos: np.ndarray, fov: float = 40.0) -> tuple[np.ndarray, flo
 
 
 class Dashboard:
-    """Matplotlib compositor: 3D scene with overlays on the left, telemetry on the right."""
+    """Matplotlib compositor for the native PyBullet render plus clean overlays.
+
+    ``layout="native"`` shows the PyBullet view full-frame with minimal overlays;
+    ``layout="dashboard"`` adds live telemetry panels on the right.
+    """
 
     def __init__(
-        self, scenario: Scenario, config: NMPCConfig, width: int = 1280, height: int = 720, theme: str = "dark"
+        self,
+        scenario: Scenario,
+        config: NMPCConfig,
+        width: int = 1280,
+        height: int = 720,
+        theme: str = "light",
+        layout: str = "native",
     ):
-        self.scenario, self.cfg = scenario, config
+        if layout not in ("native", "dashboard"):
+            raise ValueError(f"unknown layout {layout!r}")
+        self.scenario, self.cfg, self.layout = scenario, config, layout
         self.W, self.H = width, height
-        self.scene_w = int(round(width * 0.66))
+        self.scene_w = width if layout == "native" else int(round(width * 0.66))
         self.inset_w, self.inset_h = 288, 216
         th = self.th = THEMES[theme]
         traj = scenario.trajectory
@@ -101,43 +115,57 @@ class Dashboard:
         self.ax_scene.set_xlim(0, self.scene_w)
         self.ax_scene.set_ylim(height, 0)
         s = th["series"]
-        (self.ln_ref,) = self.ax_scene.plot([], [], color=th["ink2"], lw=1.3, ls=(0, (5, 4)), alpha=0.7)
+        (self.ln_ref,) = self.ax_scene.plot([], [], color=th["ink2"], lw=1.4, ls=(0, (4, 3)), alpha=0.9)
         (self.ln_trail,) = self.ax_scene.plot([], [], color=s[0], lw=2.4)
         (self.ln_pred,) = self.ax_scene.plot([], [], color=s[1], lw=2.6)
         (self.pt_pred,) = self.ax_scene.plot([], [], "o", color=s[1], ms=5, mec=th["surface"], mew=1.5)
         (self.pt_drone,) = self.ax_scene.plot([], [], "o", ms=22, mfc="none", mec=th["ink"], mew=1.4, alpha=0.75)
         self.wind_arrow = None
 
-        self.ax_scene.text(24, 34, scenario.title, color=th["ink"], fontsize=21, fontweight="semibold", va="top")
-        self.ax_scene.text(
-            24,
-            74,
-            f"Nonlinear MPC · acados SQP-RTI · {1 / config.dt:.0f} Hz · N = {config.horizon}",
-            color=th["ink2"],
-            fontsize=11.5,
-            va="top",
-        )
-        self.ax_scene.text(24, 98, scenario.description, color=th["muted"], fontsize=10.5, va="top")
-        legend_y = 34
+        # Title block and legend sit on translucent cards so they stay legible over the checkerboard.
+        x_txt = 34
+        title_block = [
+            self.ax_scene.text(
+                x_txt, 34, scenario.title, color=th["ink"], fontsize=21, fontweight="semibold", va="top", zorder=4
+            ),
+            self.ax_scene.text(x_txt, 72, scenario.description, color=th["ink2"], fontsize=11.5, va="top", zorder=4),
+            self.ax_scene.text(
+                x_txt,
+                94,
+                f"acados SQP-RTI NMPC · {1 / config.dt:.0f} Hz · N = {config.horizon}",
+                color=th["ink2"],
+                fontsize=10.5,
+                va="top",
+                zorder=4,
+            ),
+        ]
+        legend = []
+        legend_y = 40
+        x0 = self.scene_w - 190
         for label, color, ls in (
             ("flown", s[0], "-"),
-            ("reference", th["ink2"], (0, (5, 4))),
+            ("reference", th["ink2"], (0, (4, 3))),
             ("MPC prediction", s[1], "-"),
         ):
-            x0 = self.scene_w - 175
-            self.ax_scene.plot([x0, x0 + 26], [legend_y, legend_y], color=color, lw=2.4, ls=ls)
-            self.ax_scene.text(x0 + 36, legend_y, label, color=th["ink2"], fontsize=10.5, va="center")
+            legend += self.ax_scene.plot([x0, x0 + 26], [legend_y, legend_y], color=color, lw=2.4, ls=ls, zorder=4)
+            legend.append(
+                self.ax_scene.text(x0 + 36, legend_y, label, color=th["ink"], fontsize=10.5, va="center", zorder=4)
+            )
             legend_y += 22
+        self.fig.canvas.draw()
+        self._card(title_block)
+        self._card(legend)
         self.hud = self.ax_scene.text(
-            24,
-            height - 24,
+            x_txt,
+            height - 30,
             "",
             color=th["ink"],
             fontsize=11.5,
             va="bottom",
             family="DejaVu Sans Mono",
             linespacing=1.55,
-            bbox=dict(boxstyle="round,pad=0.7,rounding_size=0.6", fc=th["surface"], ec=th["axis"], alpha=0.85),
+            bbox=dict(boxstyle="round,pad=0.75,rounding_size=0.8", fc=th["surface"], ec=th["axis"], alpha=0.88),
+            zorder=4,
         )
 
         # ---------------- chase-cam inset
@@ -166,7 +194,13 @@ class Dashboard:
             bbox=dict(boxstyle="round,pad=0.3", fc=th["surface"], ec="none", alpha=0.8),
         )
 
-        # ---------------- telemetry panels
+        self.panel_axes = []
+        self.top_trail = None
+        if layout == "dashboard":
+            self._build_panels(scenario, width, height)
+
+    def _build_panels(self, scenario: Scenario, width: int, height: int) -> None:
+        th, s, traj = self.th, self.th["series"], scenario.trajectory
         left = (self.scene_w + 58) / width
         pw = (width - self.scene_w - 58 - 22) / width
         heights = [0.33, 0.22, 0.22]
@@ -174,7 +208,6 @@ class Dashboard:
         tops = [0.95]
         for h in heights[:-1]:
             tops.append(tops[-1] - h - gaps)
-        self.panel_axes = []
         for top, h in zip(tops, heights, strict=True):
             ax = self.fig.add_axes((left, top - h, pw, h), facecolor=th["surface"])
             ax.tick_params(colors=th["muted"], labelcolor=th["ink2"], labelsize=9, length=0)
@@ -216,6 +249,28 @@ class Dashboard:
         (self.solve_line,) = ax_solve.plot([], [], color=s[0], lw=1.3)
         ax_solve.set_xlim(0, self.t_end)
         ax_solve.set_xlabel("time [s]", color=th["ink2"], fontsize=9.5)
+
+    def _card(self, artists, pad: float = 12.0) -> None:
+        """Rounded translucent panel behind ``artists`` (scene pixel coordinates)."""
+        renderer = self.fig.canvas.get_renderer()
+        bb = Bbox.union([a.get_window_extent(renderer) for a in artists])
+        (xa, ya), (xb, yb) = self.ax_scene.transData.inverted().transform([[bb.x0, bb.y0], [bb.x1, bb.y1]])
+        left, right = min(xa, xb) - pad, max(xa, xb) + pad
+        top, bottom = min(ya, yb) - pad, max(ya, yb) + pad
+        th = self.th
+        self.ax_scene.add_patch(
+            FancyBboxPatch(
+                (left, top),
+                right - left,
+                bottom - top,
+                boxstyle="round,pad=0,rounding_size=9",
+                fc=th["surface"],
+                ec=th["axis"],
+                lw=1.0,
+                alpha=0.88,
+                zorder=3,
+            )
+        )
 
     def compose(
         self,
@@ -270,16 +325,17 @@ class Dashboard:
             lines.append(f"wind   {np.linalg.norm(wind):6.2f} m/s")
         self.hud.set_text("\n".join(lines))
 
-        if self.top_trail is not None:
-            self.top_trail.set_data(log.x[: k + 1, 0], log.x[: k + 1, 1])
-            self.top_dot.set_data([log.x[k, 0]], [log.x[k, 1]])
-        else:
-            for i, ln in enumerate(self.wind_lines):
-                ln.set_data(t, log.wind[: k + 1, i])
-        self.err_line.set_data(t, err)
-        self.panel_axes[1].set_ylim(0, err_ylim)
-        self.solve_line.set_data(t, log.solve_time[: k + 1] * 1e3)
-        self.panel_axes[2].set_ylim(0, solve_ylim)
+        if self.panel_axes:
+            if self.top_trail is not None:
+                self.top_trail.set_data(log.x[: k + 1, 0], log.x[: k + 1, 1])
+                self.top_dot.set_data([log.x[k, 0]], [log.x[k, 1]])
+            else:
+                for i, ln in enumerate(self.wind_lines):
+                    ln.set_data(t, log.wind[: k + 1, i])
+            self.err_line.set_data(t, err)
+            self.panel_axes[1].set_ylim(0, err_ylim)
+            self.solve_line.set_data(t, log.solve_time[: k + 1] * 1e3)
+            self.panel_axes[2].set_ylim(0, solve_ylim)
 
         self.fig.canvas.draw()
         return np.asarray(self.fig.canvas.buffer_rgba())[:, :, :3].copy()
@@ -292,7 +348,7 @@ class VideoRecorder:
     """``on_step`` callback for :func:`quadrotor_nmpc.scenarios.run` that renders frames.
 
     Frames are buffered as raw scene renders + state and composed after the
-    run, so the dashboard axes can use the final error/solve-time ranges.
+    run, so the optional telemetry panels can use the final error/solve-time ranges.
     """
 
     def __init__(

@@ -15,7 +15,6 @@ from .wind import WindField
 
 ASSET_DIR = Path(__file__).resolve().parent.parent / "assets"
 DEFAULT_URDF = ASSET_DIR / "crazyflie.urdf"
-GROUND_TEXTURE = ASSET_DIR / "ground.png"
 
 __all__ = ["CrazyflieSim", "REST_HEIGHT", "DEFAULT_URDF"]
 
@@ -37,13 +36,14 @@ class CrazyflieSim:
         wind: WindField | None = None,
         start_position=(0.0, 0.0, REST_HEIGHT),
         urdf_path: str | Path = DEFAULT_URDF,
+        specular: bool = False,
     ):
         self.params = params
         self.gui = gui
         self.physics_dt = 1.0 / physics_hz
         self.wind = wind
-        options = "--background_color_red=0.05 --background_color_green=0.06 --background_color_blue=0.08"
-        self.client = pb.connect(pb.GUI if gui else pb.DIRECT, options=options if gui else "")
+        # Native PyBullet look (default sky, checkerboard plane, lighting); only the GUI clutter is hidden.
+        self.client = pb.connect(pb.GUI if gui else pb.DIRECT)
         if gui:
             for flag in (
                 pb.COV_ENABLE_GUI,
@@ -60,11 +60,8 @@ class CrazyflieSim:
         pb.setRealTimeSimulation(0, physicsClientId=self.client)
 
         self.plane = pb.loadURDF("plane.urdf", physicsClientId=self.client)
-        if GROUND_TEXTURE.exists():
-            tex = pb.loadTexture(str(GROUND_TEXTURE), physicsClientId=self.client)
-            pb.changeVisualShape(
-                self.plane, -1, textureUniqueId=tex, rgbaColor=[1, 1, 1, 1], physicsClientId=self.client
-            )
+        if not specular:  # removes the glare hot-spot on the checkerboard
+            pb.changeVisualShape(self.plane, -1, specularColor=[0, 0, 0], physicsClientId=self.client)
         self.body = pb.loadURDF(
             str(urdf_path),
             list(start_position),

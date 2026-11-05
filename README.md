@@ -10,7 +10,7 @@
 ![PyBullet](https://img.shields.io/badge/sim-PyBullet-ef6c00)
 [![License: MIT](https://img.shields.io/badge/license-MIT-2ea44f)](LICENSE)
 
-<img src="media/hero.gif" width="860" alt="Crazyflie flying a 3D figure-eight under NMPC: PyBullet render with reference, flown path and MPC prediction overlays, plus live tracking-error and solver-time plots">
+<img src="media/hero.gif" width="860" alt="Crazyflie flying a 3D figure-eight under NMPC in the native PyBullet view, with reference, flown-path and MPC-prediction overlays and a chase-camera inset">
 
 <sub>Figure-eight at up to 2 m/s: <b>0.57 mm RMSE</b>, <b>0.65 ms</b> mean solve time at 50 Hz.
 Orange: the controller's 0.5 s prediction. <a href="media/figure_eight.mp4">Full-resolution video (MP4)</a></sub>
@@ -201,7 +201,7 @@ Watch the figure-eight live in the PyBullet GUI:
 python -m quadrotor_nmpc --scenario figure_eight --gui --realtime
 ```
 
-Run headless and save a summary plot and a dashboard video:
+Run headless and save a summary plot and a video of the PyBullet view:
 
 ```bash
 python -m quadrotor_nmpc --scenario wind --plot wind.png --video wind.mp4
@@ -247,9 +247,9 @@ quadrotor_nmpc/
 ├── simulator.py    PyBullet plant (500 Hz, forces applied at the rotor hubs)
 ├── scenarios.py    benchmark scenarios, closed-loop runner, logging and metrics
 ├── plotting.py     result figures (light and dark themes)
-├── video.py        offscreen camera, 3D overlays, dashboard video, GIF export
+├── video.py        offscreen PyBullet camera, path overlays, MP4/GIF export
 └── __main__.py     command-line interface
-assets/             Crazyflie URDF and ground texture
+assets/             Crazyflie URDF
 scripts/            make_media.py regenerates media/
 tests/              unit tests and closed-loop tests
 media/              GIFs, MP4s, figures, results.json

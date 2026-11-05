@@ -44,6 +44,9 @@ def main() -> None:
     ap.add_argument("--scenarios", nargs="+", default=ORDER, choices=ORDER)
     ap.add_argument("--no-video", action="store_true", help="only re-run and re-plot")
     ap.add_argument("--replot", action="store_true", help="re-plot from runs/*.npz without simulating")
+    ap.add_argument(
+        "--reuse-logs", action="store_true", help="take metrics/telemetry from runs/*.npz instead of re-flying them"
+    )
     args = ap.parse_args()
     if args.replot:
         replot()
@@ -61,11 +64,16 @@ def main() -> None:
         print(f"\n=== {scenario.title}: {scenario.description}")
 
         # 1) Clean headless run: metrics, plots and the telemetry shown in the videos.
-        t0 = time.perf_counter()
-        log = run(scenario, config, controller=controller)
-        log.save(str(RUNS / f"{name}.npz"))
+        saved = RUNS / f"{name}.npz"
+        if args.reuse_logs and saved.exists():
+            log = SimLog.load(str(saved))
+            print(f"    reusing {saved.name}: {fmt(log.metrics())}")
+        else:
+            t0 = time.perf_counter()
+            log = run(scenario, config, controller=controller)
+            log.save(str(saved))
+            print(f"    simulated in {time.perf_counter() - t0:.0f} s: {fmt(log.metrics())}")
         logs[name] = log
-        print(f"    simulated in {time.perf_counter() - t0:.0f} s: {fmt(log.metrics())}")
         save_both_themes(lambda th, lg=log, sc=scenario: plot_summary(lg, sc.title, th), str(MEDIA / f"{name}"))
 
         if args.no_video:
@@ -87,10 +95,14 @@ def main() -> None:
     if "wind" in logs:
         print("\n=== Wind rejection without the disturbance observer")
         # Same OCP; with the observer off the disturbance parameter simply stays at zero.
-        controller.cfg.use_observer = False
-        nominal = run(SCENARIOS["wind"](config.dt), controller.cfg, controller=controller)
-        controller.cfg.use_observer = True
-        nominal.save(str(RUNS / "wind_no_observer.npz"))
+        saved = RUNS / "wind_no_observer.npz"
+        if args.reuse_logs and saved.exists():
+            nominal = SimLog.load(str(saved))
+        else:
+            controller.cfg.use_observer = False
+            nominal = run(SCENARIOS["wind"](config.dt), controller.cfg, controller=controller)
+            controller.cfg.use_observer = True
+            nominal.save(str(saved))
         logs["wind_no_observer"] = nominal
         print(f"    {fmt(nominal.metrics())}")
         save_both_themes(lambda th: plot_wind_comparison(logs["wind"], nominal, th), str(MEDIA / "wind_comparison"))
