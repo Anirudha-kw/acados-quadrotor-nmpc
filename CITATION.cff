@@ -1,0 +1,52 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "Quadrotor NMPC with acados"
+abstract: >-
+  Real-time nonlinear model predictive control for a Crazyflie 2.x
+  nano-quadrotor, built on acados and simulated in PyBullet. It uses a
+  quaternion rigid-body model, differential-flatness references, exact
+  per-rotor thrust limits and a disturbance observer for offset-free
+  tracking under wind.
+authors:
+  - family-names: Karande
+    given-names: Anirudha
+version: 1.0.0
+date-released: "2026-11-05"
+license: MIT
+repository-code: "https://github.com/Anirudha-kw/acados-quadrotor-nmpc"
+url: "https://github.com/Anirudha-kw/acados-quadrotor-nmpc"
+keywords:
+  - model predictive control
+  - nonlinear MPC
+  - acados
+  - quadrotor
+  - Crazyflie
+  - PyBullet
+  - robotics
+references:
+  - type: article
+    title: "acados -- a modular open-source framework for fast embedded optimal control"
+    authors:
+      - family-names: Verschueren
+        given-names: Robin
+      - family-names: Frison
+        given-names: Gianluca
+      - family-names: Kouzoupis
+        given-names: Dimitris
+      - family-names: Frey
+        given-names: Jonathan
+      - family-names: van Duijkeren
+        given-names: Niels
+      - family-names: Zanelli
+        given-names: Andrea
+      - family-names: Novoselnik
+        given-names: Branimir
+      - family-names: Albin
+        given-names: Thivaharan
+      - family-names: Quirynen
+        given-names: Rien
+      - family-names: Diehl
+        given-names: Moritz
+    journal: "Mathematical Programming Computation"
+    year: 2021

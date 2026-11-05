@@ -281,6 +281,34 @@ and a second job builds acados from source and flies the point-to-point scenario
 - J. Panerati et al., "Learning to fly: a gym environment with PyBullet physics for reinforcement learning of multi-agent quadcopter control", *IROS*, 2021 (Crazyflie constants).
 - MIL-F-8785C, *Flying qualities of piloted airplanes* (1-cos gust and Dryden turbulence models).
 
+## Citation
+
+If this project helps your work, please cite it. GitHub's **Cite this repository** button (in the sidebar,
+generated from [`CITATION.cff`](CITATION.cff)) gives APA and BibTeX, or copy:
+
+```bibtex
+@software{Karande_Quadrotor_NMPC_2026,
+  author  = {Karande, Anirudha},
+  title   = {Quadrotor {NMPC} with acados: Real-time nonlinear {MPC} for a {Crazyflie} nano-quadrotor},
+  year    = {2026},
+  version = {1.0.0},
+  url     = {https://github.com/Anirudha-kw/acados-quadrotor-nmpc},
+  license = {MIT}
+}
+```
+
+The controller is built on acados. Please also cite the acados paper
+([citation guidance](https://docs.acados.org/citing)):
+
+```bibtex
+@Article{Verschueren2021,
+  Title   = {acados -- a modular open-source framework for fast embedded optimal control},
+  Author  = {Robin Verschueren and Gianluca Frison and Dimitris Kouzoupis and Jonathan Frey and Niels van Duijkeren and Andrea Zanelli and Branimir Novoselnik and Thivaharan Albin and Rien Quirynen and Moritz Diehl},
+  Journal = {Mathematical Programming Computation},
+  Year    = {2021},
+}
+```
+
 ## License
 
 [MIT](LICENSE) © Anirudha Karande
